@@ -31,6 +31,7 @@ import com.hermes.android.data.db.ChatRepository
 import com.hermes.android.data.model.MessageEntity
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen() {
     val context = LocalContext.current
@@ -145,7 +146,7 @@ fun ChatScreen() {
                                             streamingContent = event.content
                                         }
                                         ChatEventType.TOOL_CALL_START -> {
-                                            toolCallInfo = event.toolName to (event.toolArgs ?: "")
+                                            toolCallInfo = (event.toolName ?: "") to (event.toolArgs ?: "")
                                         }
                                         ChatEventType.TOOL_CALL_END -> {
                                             toolCallInfo = null
@@ -182,7 +183,7 @@ private fun MessageBubble(msg: MessageEntity) {
     val isTool = msg.role == "tool"
     val alignment = when {
         isUser -> Alignment.End
-        isTool -> Alignment.Center
+        isTool -> Alignment.CenterHorizontally
         else -> Alignment.Start
     }
     val bgColor = when {
@@ -202,7 +203,7 @@ private fun MessageBubble(msg: MessageEntity) {
     ) {
         if (isTool) {
             Text(
-                text = "[Tool: ${msg.name}]",
+                text = msg.name?.let { "[Tool: $it]" } ?: "[Tool]",
                 style = TextStyle(fontSize = 11.sp, fontFamily = FontFamily.Monospace),
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.padding(bottom = 2.dp)

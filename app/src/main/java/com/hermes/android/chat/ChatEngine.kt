@@ -2,6 +2,7 @@ package com.hermes.android.chat
 
 import android.content.Context
 import com.hermes.android.api.LlmClient
+import com.hermes.android.api.LlmException
 import com.hermes.android.api.models.*
 import com.hermes.android.data.db.ChatRepository
 import com.hermes.android.data.db.MemoryRepository

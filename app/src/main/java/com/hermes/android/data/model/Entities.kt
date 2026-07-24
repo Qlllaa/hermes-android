@@ -18,6 +18,7 @@ data class MessageEntity(
     val content: String,
     val toolCalls: String? = null,
     val toolCallId: String? = null,
+    val name: String? = null,
     val timestamp: Long = System.currentTimeMillis(),
     val tokens: Int = 0
 )

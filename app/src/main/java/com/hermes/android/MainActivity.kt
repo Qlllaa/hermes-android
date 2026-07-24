@@ -12,17 +12,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.hermes.android.data.prefs.SettingsManager
+import com.hermes.android.data.prefs.UiConfig
 import com.hermes.android.ui.theme.HermesTheme
 import com.hermes.android.ui.screens.chat.ChatScreen
 import com.hermes.android.ui.screens.settings.SettingsScreen
 import com.hermes.android.ui.screens.tools.ToolsScreen
 import com.hermes.android.ui.components.HermesBottomBar
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,15 +29,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val settingsManager = SettingsManager(this)
-
         setContent {
-            val themeMode = settingsManager.themeMode.collectAsState(initial = "system")
-            val dynamicColor = settingsManager.dynamicColor.collectAsState(initial = false)
+            val uiConfig = SettingsManager.uiConfig(this).collectAsState(initial = UiConfig())
 
             HermesTheme(
-                themeMode = themeMode.value,
-                dynamicColor = dynamicColor.value
+                themeMode = uiConfig.value.themeMode,
+                dynamicColor = uiConfig.value.dynamicColor
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),

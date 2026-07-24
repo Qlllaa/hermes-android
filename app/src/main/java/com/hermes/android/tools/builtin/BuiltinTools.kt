@@ -66,9 +66,7 @@ class CalculatorTool : Tool {
     override suspend fun execute(args: Map<String, String>): ToolResult {
         val expr = args["expression"] ?: return ToolResult(false, "Missing 'expression'")
         return try {
-            val sanitized = expr.replace("^", "**").replace("pi", "PI").replace("e", "E")
-            // Use JavaScript-style eval via Rhino/javax or simple parser
-            val result = evalExpression(sanitized)
+            val result = evalExpression(expr)
             ToolResult(true, result.toString())
         } catch (e: Exception) {
             ToolResult(false, "Evaluation error: ${e.message}")
@@ -76,10 +74,109 @@ class CalculatorTool : Tool {
     }
 
     private fun evalExpression(expr: String): Double {
-        // Simple safe evaluator using Java's ScriptEngine
-        val engine = javax.script.ScriptEngineManager().getEngineByName("js")
-        return (engine?.eval(expr) as? Number)?.toDouble()
-            ?: throw IllegalArgumentException("Could not evaluate expression")
+        val parser = ExprParser(expr)
+        return parser.parse()
+    }
+}
+
+private class ExprParser(private val input: String) {
+    private var pos = 0
+
+    fun parse(): Double {
+        val result = parseExpression()
+        skipWhitespace()
+        if (pos < input.length) throw IllegalArgumentException("Unexpected character at position $pos: '${input[pos]}'")
+        return result
+    }
+
+    private fun parseExpression(): Double {
+        var left = parseTerm()
+        skipWhitespace()
+        while (pos < input.length && input[pos] in "+-") {
+            val op = input[pos++]
+            val right = parseTerm()
+            left = if (op == '+') left + right else left - right
+            skipWhitespace()
+        }
+        return left
+    }
+
+    private fun parseTerm(): Double {
+        var left = parseFactor()
+        skipWhitespace()
+        while (pos < input.length && input[pos] in "*/") {
+            val op = input[pos++]
+            val right = parseFactor()
+            left = if (op == '*') left * right else left / right
+            skipWhitespace()
+        }
+        return left
+    }
+
+    private fun parseFactor(): Double {
+        skipWhitespace()
+        if (pos < input.length && input[pos] == '(') {
+            pos++
+            val result = parseExpression()
+            skipWhitespace()
+            if (pos >= input.length || input[pos] != ')') throw IllegalArgumentException("Missing closing parenthesis")
+            pos++
+            return result
+        }
+        if (pos < input.length && input[pos] == '-') {
+            pos++
+            return -parseFactor()
+        }
+        if (pos < input.length && input[pos] == '+') {
+            pos++
+            return parseFactor()
+        }
+        // Try to parse a function name or constant
+        if (pos < input.length && (input[pos].isLetter() || input[pos] == '_')) {
+            val start = pos
+            while (pos < input.length && (input[pos].isLetterOrDigit() || input[pos] == '_')) pos++
+            val name = input.substring(start, pos)
+            skipWhitespace()
+            if (pos < input.length && input[pos] == '(') {
+                pos++
+                val arg = parseExpression()
+                skipWhitespace()
+                if (pos >= input.length || input[pos] != ')') throw IllegalArgumentException("Missing closing parenthesis for function '$name'")
+                pos++
+                return when (name.lowercase()) {
+                    "sin" -> kotlin.math.sin(arg)
+                    "cos" -> kotlin.math.cos(arg)
+                    "tan" -> kotlin.math.tan(arg)
+                    "sqrt" -> kotlin.math.sqrt(arg)
+                    "log" -> kotlin.math.log10(arg)
+                    "ln" -> kotlin.math.ln(arg)
+                    "abs" -> kotlin.math.abs(arg)
+                    "ceil" -> kotlin.math.ceil(arg)
+                    "floor" -> kotlin.math.floor(arg)
+                    "round" -> kotlin.math.round(arg).toDouble()
+                    else -> throw IllegalArgumentException("Unknown function: $name")
+                }
+            }
+            return when (name.lowercase()) {
+                "pi" -> kotlin.math.PI
+                "e" -> kotlin.math.E
+                else -> throw IllegalArgumentException("Unknown constant: $name")
+            }
+        }
+        // Parse a number
+        return parseNumber()
+    }
+
+    private fun parseNumber(): Double {
+        skipWhitespace()
+        val start = pos
+        while (pos < input.length && (input[pos].isDigit() || input[pos] == '.')) pos++
+        if (pos == start) throw IllegalArgumentException("Expected number at position $pos")
+        return input.substring(start, pos).toDouble()
+    }
+
+    private fun skipWhitespace() {
+        while (pos < input.length && input[pos].isWhitespace()) pos++
     }
 }
 

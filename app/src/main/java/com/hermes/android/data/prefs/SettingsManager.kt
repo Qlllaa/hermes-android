@@ -8,6 +8,11 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "hermes_settings")
 
+val defaultEnabledTools = setOf(
+    "web_search", "calculator", "file_read", "file_write",
+    "shell_command", "http_request", "screenshot", "clipboard"
+)
+
 data class ApiConfig(
     val baseUrl: String = "https://api.openai.com",
     val apiKey: String = "",
@@ -42,11 +47,6 @@ object SettingsManager {
     private val KEY_ENABLED_TOOLS = stringSetPreferencesKey("enabled_tools")
     private val KEY_AUTO_EXECUTE = booleanPreferencesKey("auto_execute_tools")
     private val KEY_MAX_ITERATIONS = intPreferencesKey("max_tool_iterations")
-
-    val defaultEnabledTools = setOf(
-        "web_search", "calculator", "file_read", "file_write",
-        "shell_command", "http_request", "screenshot", "clipboard"
-    )
 
     fun apiConfig(context: Context): Flow<ApiConfig> = context.dataStore.data.map { p ->
         ApiConfig(

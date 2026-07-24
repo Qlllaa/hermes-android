@@ -1,18 +1,15 @@
 package com.hermes.android.service
 
-import android.app.Notification
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.LifecycleService
 import com.hermes.android.MainActivity
-import com.hermes.android.R
 import com.hermes.android.HermesApplication
 
-class ChatForegroundService : LifecycleService() {
+class ChatForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
         startForeground()
         return START_STICKY
     }
@@ -33,8 +30,5 @@ class ChatForegroundService : LifecycleService() {
         startForeground(1, notification)
     }
 
-    override fun onBind(intent: Intent): IBinder? {
-        super.onBind(intent)
-        return null
-    }
+    override fun onBind(intent: Intent): IBinder? = null
 }
