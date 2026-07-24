@@ -2,7 +2,10 @@ name: Build APK
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -16,20 +19,39 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Setup Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.5'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Build Debug APK
-        run: gradle assembleDebug
+        run: ./gradlew assembleDebug --no-daemon -x test
 
-      - name: Upload APK
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon -x test
+
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: hermes-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: hermes-android-debug
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 30
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-android-release
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
+          generate_release_notes: true

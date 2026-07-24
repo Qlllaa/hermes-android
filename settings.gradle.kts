@@ -6,10 +6,12 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
     }
 }
-rootProject.name = "HermesApp"
+
+rootProject.name = "HermesAndroid"
 include(":app")
