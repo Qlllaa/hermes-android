@@ -24,14 +24,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon -x test
+        run: gradle assembleDebug --no-daemon -x test
 
       - name: Build Release APK
-        run: ./gradlew assembleRelease --no-daemon -x test
+        run: gradle assembleRelease --no-daemon -x test
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
